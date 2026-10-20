@@ -192,11 +192,17 @@
   <ul class="linha">
     <li><b>1.0 · Cadeia digital</b>firmware, servidor WebSocket e aplicativo
     testados com amostras sintéticas, antes de o conversor chegar.</li>
-    <li><b>1.1 · Outra plataforma</b>captura pelo periférico de câmera de um
-    microcontrolador mais barato. Reprovada: nenhum byte capturado.</li>
-    <li><b>1.2 · Conversor físico</b>cadeia analógica completa e escala de
-    5,0 mV por código. O enlace por Wi-Fi entre as pontas foi reprovado para
-    campo.</li>
+    <li><b>1.1 · Tentativa com o ESP32-S3</b>o S3 é mais barato e tem Wi-Fi
+    próprio, sem o coprocessador que o P4 exige. Como ele não tem entrada
+    paralela dedicada, os 12 bits do conversor foram ligados à interface de
+    câmera. Em cinco configurações ensaiadas, nenhum dado foi capturado: o
+    driver do fabricante só aceita barramento de 8 bits. O projeto voltou ao
+    ESP32-P4, cuja entrada paralela é feita para essa função.</li>
+    <li><b>1.2 · Conversor físico</b>primeira captura com o conversor ligado e
+    calibração da escala em 5,0 mV por código. Nessa fase as duas pontas
+    conversavam por Wi-Fi: funcionou em bancada, mas em campo exigiria rede
+    Wi-Fi da fábrica nas duas extremidades do cabo, o que levou ao rádio
+    LoRa.</li>
     <li><b>1.3 · Rádio LoRa</b>sincronismo por rádio dedicado, ensaiado em
     bancada e em ambiente industrial.</li>
     <li class="atual"><b>1.4 · Configuração atual</b>janela de 16.384 amostras,
