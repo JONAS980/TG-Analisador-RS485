@@ -3,16 +3,335 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Analisador RS-485 — TG</title>
-<meta http-equiv="refresh" content="0; url=Analisador_RS485_TG.pdf">
+<title>Analisador RS-485</title>
+<meta name="description" content="Apresentação do Trabalho de Graduação: analisador portátil de infraestrutura de rede Modbus RTU sobre RS-485. Fatec Tatuí, 2026.">
 <style>
-  body { font-family: Arial, sans-serif; margin: 2rem 1rem; color: #222; background: #fff; }
-  a { color: #c8102e; }
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --ink: #1d2330;
+    --muted: #5b6475;
+    --line: #dde1e8;
+    --accent: #c8102e;
+    --blue: #2563eb;
+    --green: #16803c;
+    --chip: #eef2f8;
+    --capa-bg: #1d2330;
+    --capa-ink: #f6f7f9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b; --card: #1b1f27; --ink: #e7eaf0; --muted: #a0a8b8;
+      --line: #2c3240; --accent: #ff5a6e; --blue: #7aa5ff; --green: #4cc27a;
+      --chip: #242a35; --capa-bg: #0b0d11; --capa-ink: #e7eaf0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151b; --card: #1b1f27; --ink: #e7eaf0; --muted: #a0a8b8;
+    --line: #2c3240; --accent: #ff5a6e; --blue: #7aa5ff; --green: #4cc27a;
+    --chip: #242a35; --capa-bg: #0b0d11; --capa-ink: #e7eaf0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 0 16px 48px; }
+
+  header.capa { background: var(--capa-bg); color: var(--capa-ink); padding: 40px 16px 32px; }
+  header.capa .in { max-width: 860px; margin: 0 auto; }
+  .kicker { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; margin: 0 0 10px; }
+  header.capa h1 { font-size: clamp(26px, 6vw, 40px); line-height: 1.15; margin: 0 0 14px; }
+  header.capa p { margin: 4px 0; opacity: .9; }
+  header.capa .faixa { width: 64px; height: 4px; background: var(--accent); margin: 18px 0 0; border-radius: 2px; }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto; white-space: nowrap; scrollbar-width: none;
+  }
+  nav.toc::-webkit-scrollbar { display: none; }
+  nav.toc .in { max-width: 860px; margin: 0 auto; padding: 8px 16px; display: flex; gap: 6px; }
+  nav.toc a {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    background: var(--chip); color: var(--ink); text-decoration: none; font-size: 14px;
+  }
+  nav.toc a.ativo { background: var(--accent); color: #fff; }
+
+  section.slide {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 20px; margin: 18px 0; scroll-margin-top: 60px;
+  }
+  .num { color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: .05em; }
+  h2 { font-size: clamp(21px, 4.6vw, 28px); line-height: 1.2; margin: 4px 0 14px; }
+  h3 { font-size: 17px; margin: 18px 0 6px; }
+  p { margin: 0 0 12px; }
+  ul { margin: 0 0 12px; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .muted { color: var(--muted); }
+
+  figure { margin: 16px 0 6px; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 8px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  .numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+  .num-box { background: var(--chip); border-radius: 10px; padding: 12px; }
+  .num-box b { display: block; font-size: 24px; line-height: 1.2; color: var(--ink); }
+  .num-box span { font-size: 14px; color: var(--muted); }
+
+  .linha { list-style: none; padding: 0; margin: 10px 0 0 6px; border-left: 3px solid var(--line); }
+  .linha li { position: relative; padding: 0 0 14px 18px; margin: 0; }
+  .linha li::before {
+    content: ""; position: absolute; left: -8px; top: 6px; width: 13px; height: 13px;
+    border-radius: 50%; background: var(--card); border: 3px solid var(--blue);
+  }
+  .linha li.atual::before { background: var(--accent); border-color: var(--accent); }
+  .linha b { display: block; }
+
+  .dois { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  @media (min-width: 640px) { .dois { grid-template-columns: 1fr 1.2fr; } }
+  .app-img { max-width: 260px; margin: 16px auto 6px; }
+
+  .status { display: inline-block; font-size: 13px; padding: 2px 10px; border-radius: 999px; margin-left: 4px; vertical-align: 2px; }
+  .ok { background: var(--chip); color: var(--green); }
+  .aberto { background: var(--chip); color: var(--accent); }
+
+  .botoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .btn {
+    display: inline-block; padding: 11px 18px; border-radius: 10px; text-decoration: none;
+    background: var(--accent); color: #fff; font-weight: 600;
+  }
+  .btn.sec { background: var(--chip); color: var(--ink); }
+
+  footer { max-width: 860px; margin: 0 auto; padding: 8px 16px 40px; font-size: 14px; color: var(--muted); }
 </style>
 </head>
 <body>
-<p><strong>Analisador de infraestrutura de rede Modbus RTU sobre RS-485</strong><br>
-Trabalho de Graduação — Fatec Tatuí</p>
-<p>Abrindo o documento… Se não abrir, <a href="Analisador_RS485_TG.pdf">toque aqui para ver o PDF</a>.</p>
+
+<header class="capa">
+  <div class="in">
+    <p class="kicker">Trabalho de Graduação · Fatec Tatuí · 2026</p>
+    <h1>Analisador de infraestrutura de rede Modbus RTU sobre RS-485</h1>
+    <p><strong>Jonas Cristovão da Rocha</strong></p>
+    <p>Orientador: Prof. Edson Ferreira Portela</p>
+    <p>Tecnologia em Automação Industrial</p>
+    <div class="faixa"></div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Seções">
+  <div class="in">
+    <a href="#problema">Problema</a>
+    <a href="#objetivo">Objetivo</a>
+    <a href="#sistema">Sistema</a>
+    <a href="#metodo">Método</a>
+    <a href="#resultados">Resultados</a>
+    <a href="#placa">Placa</a>
+    <a href="#conclusao">Conclusão</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="slide" id="problema">
+  <div class="num">1 · O PROBLEMA</div>
+  <h2>Falhas intermitentes nascem no cabo</h2>
+  <p>Em redes Modbus RTU sobre RS-485, a maior parte das falhas intermitentes
+  vem da camada física: cabo esmagado na obra civil, resistor de terminação
+  ausente, derivação longa e ruído de acionamento de motores.</p>
+  <p>Em campo, o diagnóstico ainda é feito por inspeção visual do cabeamento.
+  As alternativas são conversores USB, que não enxergam a forma de onda, ou
+  osciloscópios industriais portáteis, de alto custo e que exigem mão de obra
+  especializada.</p>
+</section>
+
+<section class="slide" id="objetivo">
+  <div class="num">2 · OBJETIVO</div>
+  <h2>Um instrumento portátil e de baixo custo</h2>
+  <p>Desenvolver e avaliar experimentalmente um analisador que, em um só
+  equipamento:</p>
+  <ul>
+    <li>certifique a integridade do sinal elétrico do barramento;</li>
+    <li>localize a falha no cabo por refletometria no domínio do tempo (TDR);</li>
+    <li>valide o tráfego Modbus;</li>
+    <li>tenha o resultado comparado com a inspeção tradicional.</li>
+  </ul>
+  <p class="muted">Hipótese: é possível reunir essas funções com custo inferior
+  a R$ 600,00 por unidade em produção em escala.</p>
+</section>
+
+<section class="slide" id="sistema">
+  <div class="num">3 · COMO FUNCIONA</div>
+  <h2>Mestre, escravo e aplicativo</h2>
+  <figure>
+    <img src="img/arquitetura.jpg" alt="Diagrama: aplicativo Android ligado por Wi-Fi ao mestre (ESP32-P4, AD9226, AD8130 e injetor de pulso); mestre e escravo (ESP32-WROOM-32U com MAX485) ligados pelo cabo RS-485 e por rádio LoRa de 428 MHz." width="1600" height="639" loading="lazy">
+    <figcaption>Arquitetura geral do sistema.</figcaption>
+  </figure>
+  <h3>Mestre (analisador)</h3>
+  <p>ESP32-P4 lendo o conversor AD9226 de 12 bits a até 40 milhões de amostras
+  por segundo, por entrada paralela com acesso direto à memória. Janela de
+  16.384 amostras e taxa ajustável de 100 kHz a 40 MHz. Um injetor aplica um
+  degrau ao cabo para a refletometria.</p>
+  <h3>Escravo (injetor)</h3>
+  <p>ESP32-WROOM-32U gerando tráfego Modbus configurável pelo transceptor
+  MAX485, na outra ponta do cabo.</p>
+  <h3>Rádio e aplicativo</h3>
+  <p>As duas pontas se coordenam por rádio LoRa em 428 MHz, sem depender da
+  rede da planta. O operador comanda tudo por um aplicativo Android ligado ao
+  mestre por Wi-Fi.</p>
+</section>
+
+<section class="slide" id="metodo">
+  <div class="num">4 · MÉTODO</div>
+  <h2>Cinco iterações de protótipo</h2>
+  <p>Pesquisa de desenvolvimento experimental. Cada protótipo foi encerrado por
+  um conjunto de ensaios, e o resultado definiu o que mudar na versão
+  seguinte.</p>
+  <ul class="linha">
+    <li><b>1.0 · Cadeia digital</b>firmware, servidor WebSocket e aplicativo
+    testados com amostras sintéticas, antes de o conversor chegar.</li>
+    <li><b>1.1 · Outra plataforma</b>captura pelo periférico de câmera de um
+    microcontrolador mais barato. Reprovada: nenhum byte capturado.</li>
+    <li><b>1.2 · Conversor físico</b>cadeia analógica completa e escala de
+    5,0 mV por código. O enlace por Wi-Fi entre as pontas foi reprovado para
+    campo.</li>
+    <li><b>1.3 · Rádio LoRa</b>sincronismo por rádio dedicado, ensaiado em
+    bancada e em ambiente industrial.</li>
+    <li class="atual"><b>1.4 · Configuração atual</b>janela de 16.384 amostras,
+    taxa ajustável e aplicativo com seis telas; ensaios de refletometria em
+    andamento.</li>
+  </ul>
+</section>
+
+<section class="slide" id="resultados">
+  <div class="num">5 · RESULTADOS</div>
+  <h2>O que já foi medido</h2>
+  <div class="numeros">
+    <div class="num-box"><b>0</b><span>quadros corrompidos no rádio</span></div>
+    <div class="num-box"><b>180</b><span>quadros recebidos em 763 s</span></div>
+    <div class="num-box"><b>3,00 s</b><span>período dos PINGs, desvio de 36 ms</span></div>
+    <div class="num-box"><b>R$ 376,32</b><span>materiais por unidade, lote de 50</span></div>
+  </div>
+  <figure>
+    <img src="img/ensaio_campo.jpg" alt="Gráfico do ensaio de campo: faixa de cobertura com seis zonas de sombra (9, 219, 6, 6, 13 e 12 s) e, abaixo, intervalo entre PINGs concentrado em torno de 3,0 s." width="1600" height="662" loading="lazy">
+    <figcaption>Ensaio de campo do enlace de rádio: cobertura e intervalo de chegada dos PINGs.</figcaption>
+  </figure>
+  <p>No ambiente industrial, o rádio teve cobertura em 65,3 % do tempo, com
+  seis zonas de sombra, a maior de 218,8 s. Dentro da cobertura, todos os
+  quadros chegaram íntegros, e a recuperação depois de cada sombra foi
+  automática.</p>
+  <div class="dois">
+    <figure class="app-img">
+      <img src="img/app.jpg" alt="Tela inicial do aplicativo Android do analisador." width="540" height="1096" loading="lazy">
+      <figcaption>Tela inicial do aplicativo.</figcaption>
+    </figure>
+    <div>
+      <h3>Cadeia de aquisição <span class="status ok">validada</span></h3>
+      <p>Do cabo à tela do aplicativo, com resolução temporal de 25 ns a 40
+      milhões de amostras por segundo.</p>
+      <h3>Refletometria <span class="status aberto">em ensaio</span></h3>
+      <p>Esperado: resolução espacial de 2,5 m, erro de localização inferior a
+      2,5 m e coeficiente de reflexão próximo de +1 em linha aberta e de −1 em
+      curto-circuito.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="placa">
+  <div class="num">6 · PLACA DE CONDICIONAMENTO</div>
+  <h2>Rev 1.1: entrada e injetor TDR na mesma placa</h2>
+  <figure>
+    <img src="img/placa_rev11.jpg" alt="Layout da placa de circuito impresso Rev 1.1 no EasyEDA, com o AD8130 ao centro, o conversor de alimentação embaixo e o conector do barramento à direita." width="1100" height="1044" loading="lazy">
+    <figcaption>Layout da placa Rev 1.1 (EasyEDA Pro), 60,8 × 58,0 mm.</figcaption>
+  </figure>
+  <p>A placa recebe o par A/B do barramento e entrega o sinal ao conversor.
+  A revisão 1.1 trouxe:</p>
+  <ul>
+    <li>injetor de pulso por <strong>buffer tri-state</strong> (SN74LVC2G126),
+    que fica em alta impedância em repouso e não interfere na captura Modbus;</li>
+    <li>proteção de surto por um <strong>SM712</strong>, de menor capacitância,
+    no lugar de três SMAJ12CA, para não arredondar o degrau do TDR;</li>
+    <li>resistor de terminação de 120 Ω ligado direto em A e B;</li>
+    <li>pino de habilitação do AD8130 corrigido para +12 V;</li>
+    <li>regulador de 3,3 V próprio para o injetor.</li>
+  </ul>
+</section>
+
+<section class="slide" id="conclusao">
+  <div class="num">7 · CONCLUSÃO</div>
+  <h2>A arquitetura se sustenta</h2>
+  <p>O enlace de rádio não registrou nenhum quadro corrompido porque três
+  proteções independentes se somam: a correção de erro da modulação, o filtro
+  de endereço feito pelo próprio módulo e a verificação cíclica na aplicação.</p>
+  <p>O custo de materiais em escala, de R$ 376,32, fica abaixo do limite de
+  R$ 600,00 da hipótese. A comparação é com o preço de venda de produtos
+  acabados, então o que vale é a ordem de grandeza.</p>
+  <h3>Aplicações</h3>
+  <ul>
+    <li>Certificação da malha RS-485 na entrega de obra e no comissionamento,
+    com registro do ensaio no lugar de laudo por inspeção.</li>
+    <li>Localização de falha no cabo a partir de um único ponto de acesso.</li>
+    <li>Ensaio de malhas com as pontas distantes, sem prender o operador a um
+    painel.</li>
+  </ul>
+  <h3>Próximos passos</h3>
+  <p>Montar a placa Rev 1.1, concluir os ensaios de refletometria, integrar o
+  instrumento em placa única e isolar galvanicamente a entrada.</p>
+</section>
+
+<!--
+  VÍDEO: quando houver, descomentar, trocar ID_DO_VIDEO pelo ID do YouTube
+  e acrescentar <a href="#video">Vídeo</a> na barra de seções.
+<section class="slide" id="video">
+  <div class="num">VÍDEO</div>
+  <h2>O analisador em funcionamento</h2>
+  <div style="position:relative;padding-top:56.25%;border-radius:8px;overflow:hidden">
+    <iframe src="https://www.youtube-nocookie.com/embed/ID_DO_VIDEO" title="Vídeo do analisador"
+      style="position:absolute;inset:0;width:100%;height:100%;border:0"
+      allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+  </div>
+</section>
+-->
+
+<section class="slide" id="mais">
+  <h2>Quer ler o trabalho completo?</h2>
+  <p>O texto do Trabalho de Graduação, com o método e os ensaios detalhados,
+  está disponível em PDF.</p>
+  <div class="botoes">
+    <a class="btn" href="Analisador_RS485_TG.pdf">Abrir o trabalho (PDF)</a>
+    <a class="btn sec" href="https://www.linkedin.com/in/jonas-rocha-44214b9a/">Falar com o autor</a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Faculdade de Tecnologia de Tatuí, Centro Paula Souza · 2º semestre de 2026.
+  Figuras: o autor (2026).
+</footer>
+
+<script>
+  // Destaca na barra de seções a parte que está na tela.
+  (function () {
+    var links = document.querySelectorAll('nav.toc a');
+    if (!('IntersectionObserver' in window) || !links.length) return;
+    var porId = {};
+    links.forEach(function (a) { porId[a.getAttribute('href').slice(1)] = a; });
+    var obs = new IntersectionObserver(function (itens) {
+      itens.forEach(function (it) {
+        if (!it.isIntersecting) return;
+        links.forEach(function (a) { a.classList.remove('ativo'); });
+        var a = porId[it.target.id];
+        if (a) a.classList.add('ativo');
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    Object.keys(porId).forEach(function (id) {
+      var s = document.getElementById(id);
+      if (s) obs.observe(s);
+    });
+  })();
+</script>
 </body>
 </html>

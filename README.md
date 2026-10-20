@@ -4,4 +4,4 @@ Trabalho de Graduação — Fatec Tatuí "Prof. Wilson Roberto Ribeiro de Camarg
 
 Autor: Jonas Cristovão da Rocha · Orientador: Prof. Edson Ferreira Portela
 
-📄 [Ler o trabalho (PDF)](Analisador_RS485_TG.pdf) · versão web: https://jonas980.github.io/TG-Analisador-RS485/
+🖥️ Apresentação: https://jonas980.github.io/TG-Analisador-RS485/ · 📄 [Trabalho completo (PDF)](Analisador_RS485_TG.pdf)
